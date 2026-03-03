@@ -363,6 +363,7 @@ sum_corpus <- speeches %>%
 
 sum_corpus
 ```
+All three complexity measures consider syllable counts as one of the criteria for identifying "complex words", and the results show the same ranking of speakers in terms of the readability of their speeches. D. Cameron's speeches are the most readable, while J.L.R. Zapatero's are the least readable.
 
 
 3. (Advanced---optional) Estimate similarity scores between the MP tweets and the PM tweets for each week contained in the data. Plot the results. 
