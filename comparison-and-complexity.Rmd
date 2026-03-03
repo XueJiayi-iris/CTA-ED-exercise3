@@ -1,13 +1,13 @@
 ---
 title: "Computational Text Analysis - Exercise 3: Comparison and complexity"
-author: "[your name here]"
-date: "25/02/2026"
+author: "Jiayi Xue"
+date: "02/03/2026"
 output: html_document
 ---
 
 ## Introduction
 
-The hands-on exercise for this week focuses on: 1) comparing texts; 2) measuring he document-level characteristics of text---here, complexity.
+The hands-on exercise for this week focuses on: 1) comparing texts; 2) measuring the document-level characteristics of text---here, complexity.
 
 In this exercise, you will learn how to:
   
@@ -295,5 +295,74 @@ ggplot(sum_corpus, aes(x=speaker, y=mean)) +
 ## Exercises
 
 1. Compute distance measures such as "euclidean" or "manhattan" for the MP tweets as above, comparing between tweets by MPs and tweets by PM, Theresa May. 
+
+```{r}
+#estimate similarity, grouping by username
+euclidean_dist <- dfmat %>%
+  dfm_group(groups = username) %>%
+  textstat_dist(margin = "documents", method = "euclidean")
+
+eumat <- as.matrix(euclidean_dist) #convert to a matrix
+
+#generate data frame keeping only the row for Theresa May
+eumatdf <- as.data.frame(eumat[23, c(1:22, 24)])
+
+colnames(eumatdf) <- "euclidean_may" #rename column
+  
+#create column variable from rownames
+eumatdf <- tibble::rownames_to_column(eumatdf, "username")
+
+ggplot(eumatdf) +
+  geom_point(aes(x=reorder(username, -euclidean_may), y= euclidean_may)) + 
+  coord_flip() +
+  xlab("MP username") +
+  ylab("Euclidean distance score") + 
+  theme_minimal()
+```
+```{r}
+manhattan_dist <- dfmat %>%
+  dfm_group(groups = username) %>%
+  textstat_dist(margin = "documents", method = "manhattan")
+
+mhtmat <- as.matrix(manhattan_dist) 
+mhtmatdf <- as.data.frame(mhtmat[23, c(1:22, 24)])
+
+colnames(mhtmatdf) <- "manhattan_may" 
+mhtmatdf <- tibble::rownames_to_column(mhtmatdf, "username")
+
+ggplot(mhtmatdf) +
+  geom_point(aes(x=reorder(username, -manhattan_may), y= manhattan_may)) + 
+  coord_flip() +
+  xlab("MP username") +
+  ylab("Manhattan distance score") + 
+  theme_minimal()
+```
+
+
 2. Estimate at least three other complexity measures for the EU speeches as above. Consider how the results compare to the Flesch-Kincaid measure used in the article by @schoonvelde_liberals_2019.
+
+```{r}
+speeches$flesch <- textstat_readability(speeches$text, measure = "Flesch")
+speeches$fog <- textstat_readability(speeches$text, measure = "FOG")
+speeches$smog <- textstat_readability(speeches$text, measure = "SMOG")
+
+speeches$flesch <- speeches$flesch$Flesch
+speeches$fog <- speeches$fog$FOG
+speeches$smog <- speeches$smog$SMOG
+
+
+sum_corpus <- speeches %>%
+  group_by(speaker) %>%
+  summarise(mean_Flesh = mean(flesch, na.rm=TRUE),
+            mean_FOG = mean(fog, na.rm=TRUE),
+            mean_SMOG = mean(smog, na.rm=TRUE),
+            SD_Flesh=sd(flesch, na.rm=TRUE),
+            SD_FOG=sd(fog, na.rm=TRUE),
+            SD_SMOG=sd(smog, na.rm=TRUE),
+            N=length(speaker))
+
+sum_corpus
+```
+
+
 3. (Advanced---optional) Estimate similarity scores between the MP tweets and the PM tweets for each week contained in the data. Plot the results. 
